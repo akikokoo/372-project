@@ -24,12 +24,6 @@ def authenticate_user(username, password):
     conn.close()
     if doctor:
         return doctor[0], 'doctor'
-    
-    if 'role' in st.session_state:
-        if st.session_state.role == 'doctor':
-            doctor_interface()
-        elif st.session_state.role == 'patient':
-            patient_interface() 
 
     return None
 
@@ -47,8 +41,9 @@ def main():
             st.session_state.user_id = user_id
             st.session_state.role = role
             
-            doctor_interface() if role == 'doctor' else patient_interface()
             st.success(f"Logged in as {role.capitalize()}")
+            doctor_interface() if role == 'doctor' else patient_interface()
+            
             
         else:
             st.error("Invalid username or password")
