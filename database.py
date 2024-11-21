@@ -98,18 +98,29 @@ def create_tables():
     )
     ''')
 
-    # Prescriptions table (with PatientID as NationalID reference)
+    # Prescriptions table
     cursor.execute('''
-    CREATE TABLE IF NOT EXISTS Prescriptions (
-        PrescriptionID INTEGER PRIMARY KEY AUTOINCREMENT,
-        PatientID INTEGER NOT NULL,
-        DoctorID INTEGER NOT NULL,
-        Medication TEXT,
-        Dosage TEXT,
+        CREATE TABLE Prescriptions (
+            PrescriptionID INTEGER PRIMARY KEY AUTOINCREMENT,
+            PatientID INTEGER NOT NULL,
+            DoctorID INTEGER NOT NULL,
+            AppointmentID INTEGER,
+            PrescribedDate TEXT NOT NULL,
+            FOREIGN KEY (PatientID) REFERENCES Patients(NationalID),
+            FOREIGN KEY (DoctorID) REFERENCES Doctors(DoctorID),
+            FOREIGN KEY (AppointmentID) REFERENCES Appointments(AppointmentID)
+        )
+    ''')
+
+    # PrescriptionDetails table
+    cursor.execute('''
+    CREATE TABLE PrescriptionDetails (
+        DetailID INTEGER PRIMARY KEY AUTOINCREMENT,
+        PrescriptionID INTEGER NOT NULL,
+        MedicineName TEXT NOT NULL,
+        Dosage TEXT NOT NULL,
         Instructions TEXT,
-        PrescribedDate TEXT,
-        FOREIGN KEY (PatientID) REFERENCES Patients(NationalID),
-        FOREIGN KEY (DoctorID) REFERENCES Doctors(DoctorID)
+        FOREIGN KEY (PrescriptionID) REFERENCES Prescriptions(PrescriptionID)
     )
     ''')
 

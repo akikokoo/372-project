@@ -18,7 +18,7 @@ def add_appointment(patient_id, doctor_id, appointment_date, reason):
     Parameters:
         patient_id (int): The National ID of the patient. Get patient_id from st.session_state.user_id
         doctor_id (int): The ID of the doctor. Get relevant doctor IDs from the get_doctors_by_specialization function.
-        appointment_date (str): The date and time of the appointment. Format: 'YYYY-MM-DD HH:MM'
+        appointment_date (str): The date and time of the appointment. Format: 'YYYY-MM-DD HH:MM:SS'
         reason (str): Reason for the appointment.
     """
     connection = create_connection()
@@ -51,7 +51,7 @@ def get_appointments_by_patient(national_id):
 # Doctor UI
 def get_appointments_by_doctor(doctor_id):
     """
-    Retrieves all appointments for a specific doctor.
+    Retrieves all appointments for a specific doctor. Use it in doctor's appointment page.
     
     Parameters:
         doctor_id (int): The ID of the doctor. Get doctor_id from st.session_state.user_id
@@ -71,6 +71,31 @@ def get_appointments_by_doctor(doctor_id):
     results = cursor.fetchall()
     connection.close()
     return results
+
+# Doctor UI 
+def get_appointment_by_doctor_for_specific_patient(doctor_id, patient_id):
+    """
+    Retrieves the appointment_id based on the doctor and patient(a patient can have atmost 1 appointment for one specific doctor).
+    Use it when doctor adds lab results, medical records or prescriptions to the patient. 
+    The reason this function exists is to know appointment_id to link the lab results, medical records or prescriptions to the appointment.
+    
+    Parameters:
+        doctor_id (int): The ID of the doctor. Get doctor_id from st.session_state.user_id
+        patient_id (int): The National ID of the patient. Assume doctor already knows patient's id(by asking him or getting his national identity card).
+    
+    Returns:
+        list of tuples: Appointments with patient names and details.
+    """
+    connection = create_connection()
+    cursor = connection.cursor()
+    cursor.execute('''
+        SELECT AppointmentID FROM Appointments
+        WHERE PatientID = ? AND DoctorID = ?
+        ORDER BY AppointmentDate DESC LIMIT 1
+    ''', (patient_id, doctor_id))
+    result = cursor.fetchone()
+    connection.close()
+    return result[0] if result else None
 
 # Patient UI
 def cancel_appointment(appointment_id):
@@ -106,7 +131,7 @@ def get_all_test_types():
 # ** Lab Results Page **
 
 # Doctor UI
-def add_lab_result(patient_id, doctor_id, test_type_id, result_data, test_date):
+def add_lab_result(patient_id, doctor_id, test_type_id, result_data, test_date, appointment_id):
     """
     Adds a new lab result for a patient. This has the advanced feature of the project which is result_data as json string.
     
@@ -143,14 +168,15 @@ def add_lab_result(patient_id, doctor_id, test_type_id, result_data, test_date):
         doctor_id (int): The ID of the doctor ordering the test. Get doctor_id from st.session_state.user_id
         test_type_id (int): The ID of the test type (e.g., blood test, X-ray). Get test_type_id from get_all_test_types function.
         result_data (str): The data/results of the test. The format is JSON. Example:
-        test_date (str): The date the test was conducted (ISO format).
+        test_date (str): The date the test was conducted. Format: 'YYYY-MM-DD HH:MM:SS'
+        appointment_id (int): The ID of the appointment. Get appointment_id from the get_appointments_by_doctor_for_specific_patient function.
     """
     connection = create_connection()
     cursor = connection.cursor()
     cursor.execute('''
-    INSERT INTO LabResults (PatientID, DoctorID, TestTypeID, ResultData, TestDate)
-    VALUES (?, ?, ?, ?, ?)
-    ''', (patient_id, doctor_id, test_type_id, result_data, test_date))
+    INSERT INTO LabResults (PatientID, DoctorID, TestTypeID, ResultData, TestDate, AppointmentID)
+    VALUES (?, ?, ?, ?, ?, ?)
+    ''', (patient_id, doctor_id, test_type_id, result_data, test_date, appointment_id))
     connection.commit()
     connection.close()
 
@@ -182,7 +208,7 @@ def get_lab_results_by_patient(national_id):
 # ** Medical Records Page **
 
 # Doctor UI
-def add_medical_record(patient_id, doctor_id, diagnosis, treatment, notes, created_date):
+def add_medical_record(patient_id, doctor_id, diagnosis, treatment, notes, created_date, appointment_id):
     """
     Adds a new medical record for a patient.
     
@@ -192,7 +218,8 @@ def add_medical_record(patient_id, doctor_id, diagnosis, treatment, notes, creat
         diagnosis (str): The diagnosis of the patient.
         treatment (str): Treatment plan for the patient.
         notes (str): Additional notes from the doctor.
-        created_date (str): The date the record was created (ISO format).
+        created_date (str): The date the record was created. Format: 'YYYY-MM-DD HH:MM:SS'
+        appointment_id (int): The ID of the appointment. Get appointment_id from the get_appointments_by_doctor_for_specific_patient function.
     """
     connection = create_connection()
     cursor = connection.cursor()
@@ -240,23 +267,25 @@ def get_medical_records_by_patient(patient_id):
 # ** Prescriptions Page **
 
 # Doctor UI
-def add_prescription(patient_id, doctor_id, medication, dosage, instructions):
-    """
-    Adds a new prescription for a patient.
-    
-    Parameters:
-        patient_id (int): The National ID of the patient. Assume doctor know patient's id(by asking him or getting his national identity card).
-        doctor_id (int): The ID of the prescribing doctor. Get doctor_id from st.session_state.user_id
-        medication (str): The prescribed medication name.
-        dosage (str): The dosage instructions.
-        instructions (str): Additional instructions for the patient.
-    """
-    connection = create_connection()
+def add_prescription(patient_id, doctor_id, appointment_id, medicines, prescription_date):
+    connection = sqlite3.connect("your_database.db")
     cursor = connection.cursor()
+
+    # Add prescription metadata
     cursor.execute('''
-    INSERT INTO Prescriptions (PatientID, DoctorID, Medication, Dosage, Instructions, PrescribedDate)
-    VALUES (?, ?, ?, ?, ?, ?)
-    ''', (patient_id, doctor_id, medication, dosage, instructions, datetime.now()))
+        INSERT INTO Prescriptions (PatientID, DoctorID, AppointmentID, PrescribedDate)
+        VALUES (?, ?, ?, ?)
+    ''', (patient_id, doctor_id, appointment_id, prescription_date))
+    
+    prescription_id = cursor.lastrowid  # Get the newly created PrescriptionID
+
+    # Add medicine details
+    for medicine in medicines:
+        cursor.execute('''
+            INSERT INTO PrescriptionDetails (PrescriptionID, MedicineName, Dosage, Instructions)
+            VALUES (?, ?, ?, ?)
+        ''', (prescription_id, medicine['name'], medicine['dosage'], medicine.get('instructions', '')))
+    
     connection.commit()
     connection.close()
 
