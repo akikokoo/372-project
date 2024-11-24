@@ -1,5 +1,6 @@
 import streamlit as st
+from patient_page import patient_page
 
 def patient_interface():
-    st.text("Patient Interface")
-    st.text(f"here the role is: {st.session_state.role}")
+    st.write("Redirecting to the patient page...")
+    patient_page()
