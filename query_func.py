@@ -59,7 +59,11 @@ def get_appointments_by_doctor(doctor_id):
     Returns:
         list of tuples: Appointments with patient names and details.
     """
-    connection = create_connection()
+    try:
+        connection = create_connection()
+        print('CONNECTION')
+    except:
+        print('NO CONNECTION')
     cursor = connection.cursor()
     cursor.execute('''
     SELECT a.AppointmentID, p.FirstName || ' ' || p.LastName AS PatientName, a.AppointmentDate, a.Reason
@@ -350,3 +354,26 @@ def get_doctors_by_specialization(specialization):
     doctors = cursor.fetchall()
     connection.close()
     return doctors
+
+
+# Doctor UI
+def get_doctor_name_from_id(doctor_id):
+    """
+    Retrieves the name of the doctor using the doctor's ID.
+
+    Parameters:
+        doctor_id (int): The ID of the doctor.
+
+    Returns:
+        str: The full name of the doctor, or None if no doctor is found.
+    """
+    connection = create_connection()
+    cursor = connection.cursor()
+    cursor.execute('''
+        SELECT FirstName || ' ' || LastName AS DoctorName
+        FROM Doctors
+        WHERE DoctorID = ?
+    ''', (doctor_id,))
+    result = cursor.fetchone()
+    connection.close()
+    return result[0] if result else None
