@@ -96,7 +96,7 @@ def get_appointment_by_doctor_for_specific_patient(doctor_id, patient_id):
         SELECT AppointmentID FROM Appointments
         WHERE PatientID = ? AND DoctorID = ?
         ORDER BY AppointmentDate DESC LIMIT 1
-    ''', (patient_id, doctor_id))
+    ''', (patient_id, doctor_id,))
     result = cursor.fetchone()
     connection.close()
     return result[0] if result else None
@@ -208,7 +208,6 @@ def get_lab_results_by_patient(national_id):
     results = cursor.fetchall()
     connection.close()
     return results
-
 # ** Medical Records Page **
 
 # Doctor UI
@@ -229,9 +228,9 @@ def add_medical_record(patient_id, doctor_id, diagnosis, treatment, notes, creat
     cursor = connection.cursor()
     
     cursor.execute('''
-    INSERT INTO MedicalRecords (PatientID, DoctorID, Diagnosis, Treatment, Notes, CreatedDate)
-    VALUES (?, ?, ?, ?, ?, ?)
-    ''', (patient_id, doctor_id, diagnosis, treatment, notes, created_date))
+    INSERT INTO MedicalRecords (PatientID, DoctorID, Diagnosis, Treatment, Notes, CreatedDate, AppointmentID)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+    ''', (patient_id, doctor_id, diagnosis, treatment, notes, created_date, appointment_id))
     
     connection.commit()
     connection.close()
@@ -272,7 +271,7 @@ def get_medical_records_by_patient(patient_id):
 
 # Doctor UI
 def add_prescription(patient_id, doctor_id, appointment_id, medicines, prescription_date):
-    connection = sqlite3.connect("your_database.db")
+    connection = create_connection()
     cursor = connection.cursor()
 
     # Add prescription metadata

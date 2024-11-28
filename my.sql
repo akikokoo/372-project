@@ -13,5 +13,3 @@ SELECT * FROM MedicalRecords;
 SELECT * FROM Appointments;
 
 SELECT * FROM Prescriptions;
-
-DROP TABLE IF EXISTS MedicalRecords;

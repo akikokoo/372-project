@@ -10,11 +10,12 @@ def lab_results_page(patient_id):
 
     if lab_results:
         for result in lab_results:
+            # [(1, 12345678901, 2, 1, 8, '{"doctor_comment": "iyi iyi", "T1": 14.0, "T2": 123.0}', '2024-11-29 01:01:31')]
             # Randevu sonucu
-            st.subheader(f"Test Date: {result[5]}")  # Test tarihi
+            st.subheader(f"Test Date: {result[6]}")  # Test tarihi
             
             # Lab result data (JSON formatında)
-            result_data = json.loads(result[4])  # ResultData JSON formatında
+            result_data = json.loads(result[5])  # ResultData JSON formatında
             st.write("Doctor's Comment: ", result_data.get("doctor_comment", "No comment available"))
             
             # Eğer test türüne özgü veriler varsa onları yazdır

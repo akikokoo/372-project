@@ -14,7 +14,7 @@ from query_func import (
     get_doctors_by_specialization
 )
 
-def patient_page():
+def patient_page(patient_id):
     st.title("Patient Dashboard")
     st.write("Welcome to the Patient Interface!")
 

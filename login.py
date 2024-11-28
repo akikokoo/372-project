@@ -3,6 +3,7 @@ import sqlite3
 from patient_interface import patient_interface
 from doctor_interface import doctor_interface
 
+
 def get_db_connection():
     conn = sqlite3.connect('health_monitoring.db')
     return conn
@@ -12,7 +13,7 @@ def authenticate_user(username, password):
     cursor = conn.cursor()
     
 
-    cursor.execute("SELECT PatientID FROM Patients WHERE Username = ? AND Password = ?", (username, password))
+    cursor.execute("SELECT NationalID FROM Patients WHERE Username = ? AND Password = ?", (username, password))
     patient = cursor.fetchone()
     
     if patient:
@@ -42,7 +43,7 @@ def main():
             st.session_state.role = role
             
             st.success(f"Logged in as {role.capitalize()}")
-            doctor_interface() if role == 'doctor' else patient_interface()
+            doctor_interface() if role == 'doctor' else patient_interface(user_id)
             
             
         else:
