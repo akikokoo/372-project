@@ -55,6 +55,7 @@ def appointments_page(patient_id):
             # Cancel Appointment Butonu
             if st.button(f"Cancel Appointment {appointment[0]}", key=f"cancel-{appointment[0]}"):
                 cancel_appointment(appointment[0])  # Randevuyu iptal et
+                st.rerun()
                 st.success("Appointment canceled successfully!")
     else:
         st.info("No appointments found.")
@@ -113,3 +114,4 @@ def appointments_page(patient_id):
 
                                 # My Appointments kısmını otomatik olarak güncellemek için çağrılıyor
                                 appointments = get_appointments_by_patient(patient_id)  # Fetch updated appointments
+                                st.rerun()

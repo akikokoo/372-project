@@ -43,6 +43,7 @@ def main():
             st.session_state.role = role
             
             st.success(f"Logged in as {role.capitalize()}")
+            st.rerun()
             doctor_interface() if role == 'doctor' else patient_interface(user_id)
             
             
