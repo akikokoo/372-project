@@ -59,11 +59,7 @@ def get_appointments_by_doctor(doctor_id):
     Returns:
         list of tuples: Appointments with patient names and details.
     """
-    try:
-        connection = create_connection()
-        print('CONNECTION')
-    except:
-        print('NO CONNECTION')
+    connection = create_connection()
     cursor = connection.cursor()
     cursor.execute('''
     SELECT a.AppointmentID, p.FirstName || ' ' || p.LastName AS PatientName, a.AppointmentDate, a.Reason
